@@ -821,7 +821,18 @@ def getItems(items,fanart,dontLink=False):
                         addDir(name.encode('utf-8'),ext_url[0],53,thumbnail,fanArt,desc,genre,date,None,'source')
                         #xbmc.executebuiltin("Container.SetViewMode(500)")
                     else:
-                        
+                        try:
+                            if '$doregex' in name and not getRegexParsed==None:
+                                tname,setres=getRegexParsed(regexs, name)
+                                if not tname==None:
+                                    name=tname
+                        except: pass
+                        try:
+                            if '$doregex' in thumbnail and not getRegexParsed==None:
+                                tname,setres=getRegexParsed(regexs, thumbnail)
+                                if not tname==None:
+                                    thumbnail=tname
+                        except: pass
                         addLink(url[0],name.encode('utf-8', 'ignore'),thumbnail,fanArt,desc,genre,date,True,None,regexs,total)
                     #print 'success'
             except:
