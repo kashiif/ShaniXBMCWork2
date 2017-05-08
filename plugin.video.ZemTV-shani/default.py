@@ -5544,7 +5544,7 @@ def getNetworkTVPage():
             #["24","25","28","29","30","31","32"]==29
             #if tt not in ['5','33','18','0',"24","25","28","29","30","31","32","38","26"]: continue
             #if tt not in ["35","34"]: continue
-            if tt not in ["38"]: continue
+            #if tt not in ["38"]: continue
             channels["channels"].append( {
             'cid': chmain[cid][:-1].decode("base64") ,
             'chname': chmain[cname ][:-1].decode("base64"), #+ ("" if single else " "+str(v)),
@@ -5876,7 +5876,7 @@ def getPV2Url():
     fname='pv2tvpage.json'
     fname=os.path.join(profile_path, fname)
     try:
-        jsondata=getCacheData(fname,4*60*60)
+        jsondata=getCacheData(fname,2*60*60)
         if not jsondata==None:
             return base64.b64decode(jsondata)
     except:
@@ -6371,7 +6371,7 @@ def PlayNetworkTVLink(url,progress=None):
         if playua and len(playua)>0:
             defplayua=playua
         finalurl=playurl[0].split('\'')[0]+"|User-Agent="+defplayua
-    elif token=="38":
+    elif token in ["38", "26"]:
         #netData=getNetworkTVData()    
         #posturl=netData["YmVsZ2lfMzgw"][1:].decode("base64")
         #auth=netData["Z2Vsb29mc2JyaWVm"][1:].decode("base64")
