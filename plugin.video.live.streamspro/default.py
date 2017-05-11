@@ -823,7 +823,9 @@ def getItems(items,fanart,dontLink=False):
                     else:
                         try:
                             if '$doregex' in name and not getRegexParsed==None:
+                                
                                 tname,setres=getRegexParsed(regexs, name)
+                                
                                 if not tname==None:
                                     name=tname
                         except: pass
@@ -1896,13 +1898,27 @@ def doEvalFunction(fun_call,page_data,Cookie_Jar,m):
     ret_val=''
     if functions_dir not in sys.path:
         sys.path.append(functions_dir)
-        
+
+    
+    
     f=open(os.path.join(functions_dir,'LSProdynamicCode.py'),"wb")
     f.write("# -*- coding: utf-8 -*-\n")
     f.write(fun_call.encode("utf-8"));
     
     f.close()
-    import LSProdynamicCode
+    
+    
+    try:
+        if 'LSProdynamicCode' in sys.modules:  
+            print 'unloading LSProdynamicCode', sys.modules
+            import LSProdynamicCode
+            reload(LSProdynamicCode)
+        else:
+            print ' LSProdynamicCode not loaded yet'
+            import LSProdynamicCode
+    except:
+        traceback.print_exc(file=sys.stdout)
+     
     ret_val=LSProdynamicCode.GetLSProData(page_data,Cookie_Jar,m)
     try:
         return str(ret_val)
