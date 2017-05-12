@@ -101,7 +101,7 @@ def getlinks():
     rnd2=str(int(math.floor(random.random()*1000000) ))
     rnd3=str(int(math.floor(random.random()*1000000) ))
     headers=[('Cookie', '_ga=GA1.%s.%s.%s'%(rnd1,rnd2,rnd3)),('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'),('User-Agent','Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3')]
-    link = getUrl(base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuY29tLw=='),headers=headers)
+    link = getUrl(base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuaXMv'),headers=headers)
 
     jsdata=gettext(link)
 #    print link
@@ -122,13 +122,13 @@ def getlinks():
         match_pk=smpk(match_pk,jsdata)
         print 'match_pk',match_pk
         ref=[('User-Agent','Mozilla/5.0 (iPhone; CPU iPhone OS 9_0_2 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13A452 Safari/601.1'),
-            ('Referer','http://smartcric.com/')]
+            ('Referer','http://smartcric.is/')]
         #lburl=re.findall('(http.*?loadbalancer)',link)[0]
         #fms=getUrl(lburl,headers=ref).split('=')[1]
         #sourcelb=lburl.split('/')[2].split(':')[0]
         #match_url=match_url.replace('webaddress',sourcelb)
         final_url=  match_url+   match_sn
-        headers=[('Referer', base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuY29tLw==')),('Origin', base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuY29t')),('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'),('User-Agent','Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3')]
+        headers=[('Referer', base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuaXMvJw==')),('Origin', base64.b64decode('aHR0cDovL3d3dy5zbWFydGNyaWMuaXM=')),('Accept','text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'),('User-Agent','Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3')]
 
         link = getUrl(final_url,headers=headers)
 
@@ -152,7 +152,7 @@ def getlinks():
                         curl=s["streamName"]
                         streamid=str(s["streamId"])
                         
-                        curl1="http://"+fms+":8088/mobile/"+curl+"/playlist.m3u8?id="+streamid+"&pk="+match_pk+'|Referer=http://www.smartcric.com/&User-Agent=Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3';
+                        curl1="http://"+fms+":8088/mobile/"+curl+"/playlist.m3u8?id="+streamid+"&pk="+match_pk+'|Referer=http://www.smartcric.is/&User-Agent=Mozilla/5.0 (iPad; CPU OS 5_0 like Mac OS X) AppleWebKit/534.46 (KHTML, like Gecko) Version/5.1 Mobile/9A334 Safari/7534.48.3';
                         ret.append((cname+' '+Colored(qname ,'red',True) ,curl1 ,15))		#name,url,mode,icon
                         #curl1="rtsp://"+"206.190.140.164"+":1935/mobile/"+curl+"?key="+match_sn+match_pk;
                         #curl1="rtsp://"+fms+":1935/mobile/"+curl+"?id="+streamid+"&key="+match_sn+match_pk;
