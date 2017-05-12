@@ -1,3 +1,5 @@
+[B]Version 6.6.7[/B]
+revert DM play, now option with right click
 [B]Version 6.6.6[/B]
 smartcric error
 [B]Version 6.6.5[/B]
