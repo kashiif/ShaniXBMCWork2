@@ -63,26 +63,29 @@ def gettext(htmltxt):
     jsurl=re.findall('(http.*?smartcric.*?\.js)',htmltxt)[-1]
     print jsurl
     jsdata=getUrl(jsurl)
-    if jsdata.startswith('var _'):
+    if jsdata.strip().startswith('var _'):
         return gettext2(jsdata)
     import re
-    anchorreg='parseInt\((.*?)\)'
-    ancdata=re.findall(anchorreg,jsdata)[0]
-    parsedata=re.findall('\[([0-9,\,]*)\];var %s=(.*?);.+?[^(parse)]parseInt\((.*?)\)'%ancdata,jsdata)[0]
+    try:
+        anchorreg='parseInt\((.*?)\)'
+        ancdata=re.findall(anchorreg,jsdata)[0]
+        parsedata=re.findall('\[([0-9,\,]*)\];var %s=(.*?);.+?[^(parse)]parseInt\((.*?)\)'%ancdata,jsdata)[0]
 
-    maincode=parsedata[0]
-    mathdata=parsedata[1]
-    s= '[%s]'%maincode;
-    s=eval(s)
-    #s=[47, 42]
-    ss=[]
-    MathData = eval(mathdata)
-    for a in s:
-        try:
-            ss+=chr(a-int(MathData))
-        except: 
-            print 'error'
-    print repr(  ''.join(ss))
+        maincode=parsedata[0]
+        mathdata=parsedata[1]
+        s= '[%s]'%maincode;
+        s=eval(s)
+        #s=[47, 42]
+        ss=[]
+        MathData = eval(mathdata)
+        for a in s:
+            try:
+                ss+=chr(a-int(MathData))
+            except: 
+                print 'error'
+        print repr(  ''.join(ss))
+    except: 
+        ss=[jsdata]
     return 'v1',''.join(ss)
 
 def gettext2(jstext):
@@ -170,19 +173,27 @@ def getlinks():
 def smpk(frompk, jsdata):
     if jsdata[0]=='v2':
         return smpk2(frompk,jsdata);
-    refind='hash.*?(oh.*)'
-    jsline=re.findall(refind, jsdata)[0].split(' ')
+    varname='oh'
+    try:
+        
+        refind='hash.*?(oh.*)'
+        jsline=re.findall(refind, jsdata)[0].split(' ')
+    except : 
+        varname=re.findall('showChannels.?.?\((.*?)\)',jsdata[1])[0]
+        refind='\=.?(%s.*)'%varname
+        print jsdata[1]
+        jsline=re.findall(refind, jsdata[1])[0].split(' ')
     oh=''
     oh=frompk
     fv=[]
     
     for ln in jsline:
         if 'substring' in ln:
-            ln=ln.replace('oh.substring(','oh[')
+            ln=ln.replace('%s.substring('%varname,'oh[')
             ln=ln.replace(',',':')
             ln=ln.replace(')',']')
-        if 'oh.length' in ln:
-            ln=ln.replace('oh.length','len(oh)')
+        if '%s.length'%varname in ln:
+            ln=ln.replace('%s.length'%varname,'len(oh)')
         fv.append(ln.strip().replace(';',''))
     print fv
     s=' '.join(fv)

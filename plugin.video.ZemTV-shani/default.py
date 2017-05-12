@@ -3234,15 +3234,17 @@ def AddWatchCric(url):
 def AddSmartCric(url):
     import scdec
     channeladded=False
-    for source in scdec.getlinks():
-        if 1==1:#ctype=='liveWMV' or ctype=='manual':
-#                print source
-            addDir (source[0],source[1],source[2],'', False, True,isItFolder=False)		#name,url,mode,icon
-            channeladded=True
-    if not channeladded:
-        cname='No streams available'
-        curl=''
-        addDir('    -'+cname ,curl ,-1,'', False, True,isItFolder=False)		#name,url,mode,icon 
+    try:
+        for source in scdec.getlinks():
+            if 1==1:#ctype=='liveWMV' or ctype=='manual':
+    #                print source
+                addDir (source[0],source[1],source[2],'', False, True,isItFolder=False)		#name,url,mode,icon
+                channeladded=True
+        if not channeladded:
+            cname='No streams available'
+            curl=''
+            addDir('    -'+cname ,curl ,-1,'', False, True,isItFolder=False)		#name,url,mode,icon 
+    except:  traceback.print_exc(file=sys.stdout)
     addDir('Refresh Listing' ,'Live' ,144,'')
 
     addDir('Refresh Fetch Code' ,'Live' ,97,'')
