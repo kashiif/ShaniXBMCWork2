@@ -24,7 +24,8 @@ tsdownloader=False
 hlsretry=False
 resolve_url=['180upload.com', 'allmyvideos.net', 'bestreams.net', 'clicknupload.com', 'cloudzilla.to', 'movshare.net', 'novamov.com', 'nowvideo.sx', 'videoweed.es', 'daclips.in', 'datemule.com', 'fastvideo.in', 'faststream.in', 'filehoot.com', 'filenuke.com', 'sharesix.com',  'plus.google.com', 'picasaweb.google.com', 'gorillavid.com', 'gorillavid.in', 'grifthost.com', 'hugefiles.net', 'ipithos.to', 'ishared.eu', 'kingfiles.net', 'mail.ru', 'my.mail.ru', 'videoapi.my.mail.ru', 'mightyupload.com', 'mooshare.biz', 'movdivx.com', 'movpod.net', 'movpod.in', 'movreel.com', 'mrfile.me', 'nosvideo.com', 'openload.io', 'played.to', 'bitshare.com', 'filefactory.com', 'k2s.cc', 'oboom.com', 'rapidgator.net', 'primeshare.tv', 'bitshare.com', 'filefactory.com', 'k2s.cc', 'oboom.com', 'rapidgator.net', 'sharerepo.com', 'stagevu.com', 'streamcloud.eu', 'streamin.to', 'thefile.me', 'thevideo.me', 'tusfiles.net', 'uploadc.com', 'zalaa.com', 'uploadrocket.net', 'uptobox.com', 'v-vids.com', 'veehd.com', 'vidbull.com', 'videomega.tv', 'vidplay.net', 'vidspot.net', 'vidto.me', 'vidzi.tv', 'vimeo.com', 'vk.com', 'vodlocker.com', 'xfileload.com', 'xvidstage.com', 'zettahost.tv']
 g_ignoreSetResolved=['plugin.video.dramasonline','plugin.video.f4mTester','plugin.video.shahidmbcnet','plugin.video.SportsDevil','plugin.stream.vaughnlive.tv','plugin.video.ZemTV-shani']
-
+global gLSProDynamicCodeNumber
+gLSProDynamicCodeNumber=0
 class NoRedirection(urllib2.HTTPErrorProcessor):
    def http_response(self, request, response):
        return response
@@ -1895,34 +1896,35 @@ def doEval(fun_call,page_data,Cookie_Jar,m):
 
 def doEvalFunction(fun_call,page_data,Cookie_Jar,m):
 #    print 'doEvalFunction'
-    ret_val=''
-    if functions_dir not in sys.path:
-        sys.path.append(functions_dir)
+    try:
+        global gLSProDynamicCodeNumber
+        gLSProDynamicCodeNumber=gLSProDynamicCodeNumber+1
+        ret_val=''
+        print 'doooodoo'
+        if functions_dir not in sys.path:
+            sys.path.append(functions_dir)
 
-    
-    
-    f=open(os.path.join(functions_dir,'LSProdynamicCode.py'),"wb")
-    f.write("# -*- coding: utf-8 -*-\n")
-    f.write(fun_call.encode("utf-8"));
-    
-    f.close()
-    
-    
-    try:
-        if 'LSProdynamicCode' in sys.modules:  
-            print 'unloading LSProdynamicCode', sys.modules
-            import LSProdynamicCode
-            reload(LSProdynamicCode)
-        else:
-            print ' LSProdynamicCode not loaded yet'
-            import LSProdynamicCode
-    except:
-        traceback.print_exc(file=sys.stdout)
-     
-    ret_val=LSProdynamicCode.GetLSProData(page_data,Cookie_Jar,m)
-    try:
-        return str(ret_val)
-    except: return ret_val
+        filename='LSProdynamicCode%s.py'%str(gLSProDynamicCodeNumber)
+        filenamewithpath=os.path.join(functions_dir,filename)
+        f=open(filenamewithpath,"wb")
+        f.write("# -*- coding: utf-8 -*-\n")
+        f.write(fun_call.encode("utf-8"));
+        f.close()
+        print 'before do'
+        LSProdynamicCode = import_by_string(filename.split('.')[0])
+        print 'after'
+         
+        ret_val=LSProdynamicCode.GetLSProData(page_data,Cookie_Jar,m)
+        try:
+            return str(ret_val)
+        except: return ret_val
+    except: traceback.print_exc()
+    return ""
+
+def import_by_string(full_name):
+    import importlib
+    return importlib.import_module(full_name, package=None)
+
 
 
 def getGoogleRecaptchaResponse(captchakey, cj,type=1): #1 for get, 2 for post, 3 for rawpost
