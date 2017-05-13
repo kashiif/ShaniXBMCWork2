@@ -1911,7 +1911,7 @@ def doEvalFunction(fun_call,page_data,Cookie_Jar,m):
         f.write(fun_call.encode("utf-8"));
         f.close()
         print 'before do'
-        LSProdynamicCode = import_by_string(filename.split('.')[0])
+        LSProdynamicCode = import_by_string(filename.split('.')[0],filenamewithpath)
         print 'after'
          
         ret_val=LSProdynamicCode.GetLSProData(page_data,Cookie_Jar,m)
@@ -1921,10 +1921,14 @@ def doEvalFunction(fun_call,page_data,Cookie_Jar,m):
     except: traceback.print_exc()
     return ""
 
-def import_by_string(full_name):
-    import importlib
-    return importlib.import_module(full_name, package=None)
-
+def import_by_string(full_name,filenamewithpath):
+    try:
+        
+        import importlib
+        return importlib.import_module(full_name, package=None)
+    except:
+        import imp
+        return imp.load_source(full_name,filenamewithpath)
 
 
 def getGoogleRecaptchaResponse(captchakey, cj,type=1): #1 for get, 2 for post, 3 for rawpost

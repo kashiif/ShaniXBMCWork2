@@ -1,3 +1,5 @@
+[B]Version 2.8.1[/B]
+regex in title and thumbnail BUGFIX revised again
 [B]Version 2.8.0[/B]
 regex in title and thumbnail BUGFIX revised
 [B]Version 2.7.9[/B]
