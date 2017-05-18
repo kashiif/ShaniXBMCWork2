@@ -246,17 +246,36 @@ def AddEnteries(Fromurl):
     #	match =re.findall('<img src="(.*?)" alt=".*".+<\/a>\n*.+<div class="post-title"><a href="(.*?)".*<b>(.*)<\/b>', link, re.UNICODE)
     #	print Fromurl
     #	match =re.findall('<div class="videopart">\s*<div class="paneleft">\s*<a class="pthumb" href="(.*?)" title="(.*?)".*?img.*?src="(.*?)" class="attachment-index-post-thumbnail wp-post-image"', link, re.M|re.DOTALL)
-    first='<a href="(.*?)".*?title="(.*?)".*?\s.*img.*?src="(.*?)"'
+
+    # try latest format first that should match most pages
+	index_url = 0
+    index_name = 2
+    index_image = 1
+
+    first='<a href="(.*?)".*>.*?\s*<img.*?src="(.*?)".*title="(.*?)"'
     match =re.findall(first, link)
-    first='<a href="(.*?)".*?title="(.*?)".*?\s*.*?div.*?\s*<img.*?src="(.*?)"'
-    if len (match)==0:     
+
+    # Now try the regex that worked on older pages
+    if len (match)==0:
+        index_url = 0
+        index_name = 1
+        index_image = 2
+        first='<a href="(.*?)".*?title="(.*?)".*?\s.*img.*?src="(.*?)"'
+        match =re.findall(first, link)
+
+    if len (match)==0:
+        first='<a href="(.*?)".*?title="(.*?)".*?\s*.*?div.*?\s*<img.*?src="(.*?)"'
         match =re.findall(first, link)
         
- 
-    #print match
+
+    print match
 
     for cname in match:
-        addDir(cname[1] ,cname[0] ,4,cname[2],isItFolder=False)
+        addDir(cname[index_name], # name,,
+               cname[index_url], # url
+               4,        # mode
+               cname[index_image], # icon image
+               isItFolder=False)
 
     nextpageurl=''
     if 'admin-ajax.php' in Fromurl:
