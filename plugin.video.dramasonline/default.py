@@ -268,7 +268,7 @@ def AddEnteries(Fromurl):
         match =re.findall(first, link)
         
 
-    print match
+    # print match
 
     for cname in match:
         addDir(cname[index_name], # name,,
