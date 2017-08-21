@@ -109,6 +109,7 @@ def show_channels():
     addDir('TVOne Shows', 'http://dramaonline.com/pakistani-dramas-tvone-latest-dramas-episodes-online//', 2,
            'http://dramaonline.com/wp-content/themes/mts_newspaper/images/tvone.jpeg')
     addDir('SeeTV Shows', baseLink % '/pakistani-dramas-see-tv', MODE_LIST_SHOWS, 'http://i.imgur.com/BkJ1440.png')
+    addDir('Aaj TV Shows', baseLink % '/aaj-tv-entertainment', MODE_LIST_SHOWS, 'http://i.imgur.com/cdjZmZt.png')
     addDir('Teleplays', 'http://www.dramaonline.com/?cat=255', 3,
            'http://i.imgur.com/FhL5Yas.png')  # these are is links
     addDir('All Time Hits', 'http://dramaonline.com/watch-evergreen-famous-pakistani-dramas-of-all-time/', 2,
@@ -162,32 +163,27 @@ def SearchDramas(Fromurl):
 
 
 def list_series_dramas_online(source_url):
-    link = get_html(source_url)
-
     pattern = re.compile(
         '<td><a (title=".*?"\s)*href="(?P<url>[^"]*)"[^>]*><img (class="[^"]*")*\s*(src="(?P<imgsrc1>[^"]*)"\salt="(?P<seriesname1>[^"]*)"|alt="(?P<seriesname2>[^"]*)"\ssrc="(?P<imgsrc2>[^"]*)")')
 
-    _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES)
+    html_source = _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES)
 
-    match = re.findall('"nextLink":"(http.*?)"', link)
+    match = re.findall('"nextLink":"(http.*?)"', html_source)
     # print link,'match',match
     if len(match) == 1:
-        addDir('Next Page', match[0].replace('\\/', '/'), MODE_LIST_SHOWS, '')
+        addDir('Next Page >>', match[0].replace('\\/', '/'), MODE_LIST_SHOWS, '')
 
 
 def list_series_hum_tv(source_url):
-    link = get_html(source_url)
-
     pattern = re.compile(
-        '<div class="trending_single">\s*<a href="(?P<url>[^"]+)">\s*<figure>\s*<img src="(?P<imgsrc1>[^"]+)" .*>\s*<figcaption>\s*<p>(?P<seriesname1>.+)<\/p>'
+        '<div class="trending_single">\s*<a href="(?P<url>[^"]+)">\s*<figure>\s*<img src="(?P<imgsrc1>[^"]+)" .*>\s*.*\s*<figcaption>\s*<p>(?P<seriesname1>.+)<\/p>'
     )
 
-    _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES_HUM_TV)
+    html_source = _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES_HUM_TV)
 
-    match = re.findall('"nextLink":"(http.*?)"', link)
-    # print link,'match',match
-    if len(match) == 1:
-        addDir('Next Page', match[0].replace('\\/', '/'), MODE_LIST_SHOWS, '')
+    matches = re.findall('<a class="next page-numbers" href="([^"]*)">', html_source)
+    if len(matches) > 0:
+        addDir('Next Page >>', matches[0], MODE_LIST_SHOWS_HUM_TV, '')
 
 
 def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_screen):
@@ -215,12 +211,7 @@ def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_scree
         # print item_name, cname[groupUrl], cname[groupImage]
         addDir(item_name, named_groups_dict['url'], mode_for_next_screen, img_src)  # name, url, mode, icon
 
-
-    match = re.findall('"nextLink":"(http.*?)"', html_source)
-    # print link,'match',match
-    if len(match) == 1:
-        addDir('Next Page', match[0].replace('\\/', '/'), MODE_LIST_SHOWS, '')
-
+    return html_source
 
 def TopRatedDramas(Fromurl):
     link = get_html(Fromurl)
@@ -249,10 +240,14 @@ def list_entries_dramas_online(source_url):
         html_content = get_html(source_url)
 
     pattern = re.compile(
-        '<img width.*? src="(?P<imagesrc>.+?[^"])".*?\/>\s*<\/a><\/div><div class="postlisttitlewrap"><h5 class="postlisttitle"><a href="(?P<url>.+?[^"])".*?>(?P<episodetitle>.+?)<\/a>'
+        '<div class="featuredimage">\s\s+<a href="(?P<url>[^"]+)" rel="bookmark">\s\s+<img width="\d\d+" height="\d\d+" src="(?P<imagesrc>[^"]+)" class="[^"]+" alt="[^"]*" title="(?P<episodetitle>[^"]+)" srcset'
     )
 
-    _list_entries(source_url, pattern)
+    start = html_content.index('<div id="wrapper">')
+    end = html_content.index('</div><!-- #wrapper -->', start + 1)
+    main_content = html_content[start:end]
+
+    _list_entries(main_content, pattern)
 
     nextpageurl = ''
     if 'admin-ajax.php' in source_url:
@@ -260,26 +255,31 @@ def list_entries_dramas_online(source_url):
     else:
         if 'class="paginate">' in html_content:
             match = re.findall("<a href='(.*?)' class=", html_content.split('class="paginate">')[1].split('div')[0])
-            print 'next', match
+            print 'Next Page', match
             if len(match) > 0:
                 nextpageurl = match[-1]
     if len(nextpageurl) > 0:
-        addDir('Next Page', nextpageurl, 3, '')
+        addDir('Next Page >>', nextpageurl, MODE_LIST_EPISODES, '')
         # print 'match', match
 
 
 def list_entries_hum_tv(source_url):
     print 'getting entries %s' % source_url
 
+    html_content = get_html(source_url)
+
     pattern = re.compile(
-        '<div class="trending_single">\s*<a href="(?P<url>[^"]+)".*[^>]>\s*<figure>\s*<img src="(?P<imagesrc>[^"]+)" alt="(?P<episodetitle>[^"]+)"'
+        '<div class="trending_single">\s*<a href="(?P<url>[^"]+)".*[^>]>\s*<figure>\s*<img src="(?P<imagesrc>[^"]+)"[^>]*>\s*.*\s*<h4>(?P<episodetitle>[^<]*)'
     )
 
-    _list_entries(source_url, pattern)
+    _list_entries(html_content, pattern)
+
+    matches = re.findall('<a class="next page-numbers" href="([^"]*)">', html_content)
+    if len(matches) > 0:
+        addDir('Next Page >>', matches[0], MODE_LIST_EPISODES_HUM_TV, '')
 
 
-def _list_entries(source_url, pattern_for_episode):
-    html_source = get_html(source_url)
+def _list_entries(html_source, pattern_for_episode):
 
     for match in pattern_for_episode.finditer(html_source):
         named_groups_dict = match.groupdict()
@@ -289,6 +289,8 @@ def _list_entries(source_url, pattern_for_episode):
                4,  # mode
                named_groups_dict['imagesrc'],  # image
                isItFolder=False)
+
+    return html_source
 
 def AddChannels(liveURL):
     link = get_html(liveURL)
@@ -451,16 +453,22 @@ def getTuneTvUrl(html, short):
         print 'match: ' + playURL.group(1)
 
         playURL = 'http://embed.tune.pk/play/%s?autoplay=no&ssl=no' % playURL.group(2)
-        print playURL
+        print 'playURL: %s' % playURL
+        html_source = get_html(playURL)
 
-        link = get_html(playURL)
+        pattern = "var requestURL = '([^']*)';"
+        match = re.findall(pattern, html_source)
+        print 'match: %s' % match
+        html_source = get_html(match[0])
+
         pattern = 'file":"(.*?)"'
-        match = re.findall(pattern, link)
-        print 'match', match
+        match = re.findall(pattern, html_source)
+        print 'match: %s' % match
+
         stream_url = match[0]
-        print stream_url
+        print 'stream_url: %s' % stream_url
         stream_url = stream_url.replace('\\/', '/')
-        #		stream_url = urlresolver.HostedMediaFile(playURL).resolve()
+
         return stream_url
     except:
         traceback.print_exc(file=sys.stdout)
@@ -808,8 +816,15 @@ try:
         list_entries_dramas_online(url)
 
     elif mode == MODE_LIST_EPISODES_HUM_TV:
-        print "Ent url is " + url
-        list_entries_hum_tv(url)
+        all_episodes_url = ''
+
+        if url.find('episodes/page/') > 0:
+            all_episodes_url = url
+        else:
+            all_episodes_url = '%s%s' % (url.rstrip('/'), '/episodes/')
+
+        print "Ent url is %s; Fetching %s" % (url, all_episodes_url)
+        list_entries_hum_tv(all_episodes_url)
 
     elif mode == 4:
         print "Play url is " + url
@@ -842,3 +857,4 @@ except Exception, ex:
 
 if not (mode == 7 or mode == 4 or mode == 9):
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
