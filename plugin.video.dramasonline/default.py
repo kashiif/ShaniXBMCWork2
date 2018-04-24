@@ -166,7 +166,7 @@ def list_series_dramas_online(source_url):
     pattern = re.compile(
         '<td><a (title=".*?"\s)*href="(?P<url>[^"]*)"[^>]*><img (class="[^"]*")*\s*(src="(?P<imgsrc1>[^"]*)"\salt="(?P<seriesname1>[^"]*)"|alt="(?P<seriesname2>[^"]*)"\ssrc="(?P<imgsrc2>[^"]*)")')
 
-    html_source = _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES)
+    html_source = _list_series_for_channel(source_url, pattern, MODE_LIST_EPISODES, '<div class="entry-content">', '</table>')
 
     match = re.findall('"nextLink":"(http.*?)"', html_source)
     # print link,'match',match
@@ -186,11 +186,20 @@ def list_series_hum_tv(source_url):
         addDir('Next Page >>', matches[0], MODE_LIST_SHOWS_HUM_TV, '')
 
 
-def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_screen):
-    html_source = get_html(source_url)
+def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_screen, start_str = None, end_str = None):
+    full_source = get_html(source_url)
 
-    for cname in pattern_for_series.finditer(html_source):
+    if start_str and end_str:
+        start = full_source.index(start_str)
+        end = full_source.index(end_str, start + 1)
+        target_source = full_source[start:end]
+    else:
+        target_source = full_source
+
+    for cname in pattern_for_series.finditer(target_source):
         named_groups_dict = cname.groupdict()
+
+        # print '**** %s' % named_groups_dict
 
         alt_text = named_groups_dict['seriesname1'] or named_groups_dict['seriesname2']
         img_src = named_groups_dict['imgsrc1'] or named_groups_dict['imgsrc2']
@@ -203,7 +212,7 @@ def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_scree
 
         # print '%s - %s - %s' % (item_name, name_from_url, name_from_re)
 
-        if (name_from_url.lower() != name_from_re.lower()):
+        if (name_from_re is None or name_from_url.lower() != name_from_re.lower()):
             item_name = name_from_url
 
         item_name = item_name.replace('Watch ', '').replace('watch ', '').title()
@@ -211,7 +220,7 @@ def _list_series_for_channel(source_url, pattern_for_series, mode_for_next_scree
         # print item_name, cname[groupUrl], cname[groupImage]
         addDir(item_name, named_groups_dict['url'], mode_for_next_screen, img_src)  # name, url, mode, icon
 
-    return html_source
+    return target_source
 
 def TopRatedDramas(Fromurl):
     link = get_html(Fromurl)
@@ -240,13 +249,14 @@ def list_entries_dramas_online(source_url):
         html_content = get_html(source_url)
 
     pattern = re.compile(
-        '<div class="featuredimage">\s\s+<a href="(?P<url>[^"]+)" rel="bookmark">\s\s+<img width="\d\d+" height="\d\d+" src="(?P<imagesrc>[^"]+)" class="[^"]+" alt="[^"]*" title="(?P<episodetitle>[^"]+)" srcset'
+        '<div class="featuredimage">\s\s*<a href="(?P<url>[^"]+)" rel="bookmark">\s\s*<img width="\d\d+" height="\d\d+" src="(?P<imagesrc>[^"]+)" class="[^"]+" alt="[^"]*" title="(?P<episodetitle>[^"]+)" srcset'
     )
 
-    start = html_content.index('<div id="wrapper">')
-    end = html_content.index('</div><!-- #wrapper -->', start + 1)
+    start = html_content.index('<div id="content"')
+    end = html_content.index('<div id="footerwidgets"', start + 1)
     main_content = html_content[start:end]
 
+    # print '***** main_content %s' % main_content
     _list_entries(main_content, pattern)
 
     nextpageurl = ''
@@ -364,7 +374,7 @@ def getPlaywireUrl(html, short):
 
         else:
             # try new links
-            str = '<script data-config="(http)?...?config.playwire.com.(\d+)\/videos.v2.(\d+)\/'
+            str = '<script data-config="\/\/config.playwire.com\/(\d+)\/videos\/v2\/(\d+)\/'
             match = re.findall(str, html)
 
             if len(match):
@@ -372,6 +382,7 @@ def getPlaywireUrl(html, short):
                 playURL = match[len(match) - 1]
 
         print playURL
+
         if short:
             return playURL
 
@@ -379,9 +390,10 @@ def getPlaywireUrl(html, short):
             return None
 
         if newFormat:
-            (pp, PubId, videoID) = playURL
+            (PubId, videoID) = playURL
 
             cdnUrl = "http://config.playwire.com/%s/videos/v2/%s/manifest.f4m" % (PubId, videoID)
+            print 'getting playwire video at %s' % cdnUrl
             link = get_html(cdnUrl)
 
             str = '<baseURL>\s*(.+)\s*</baseURL>\s*<media url="(.+)" bitrate'
@@ -450,20 +462,24 @@ def getTuneTvUrl(html, short):
         if playURL is None:
             return None
 
-        print 'match: ' + playURL.group(1)
+        print 'match 0: ' + playURL.group(1)
 
-        playURL = 'http://embed.tune.pk/play/%s?autoplay=no&ssl=no' % playURL.group(2)
-        print 'playURL: %s' % playURL
+        playURL = 'https://embed.tune.pk/play/%s?autoplay=no&ssl=yes&inline=1' % playURL.group(2)
+        print 'TuneTV playURL: %s' % playURL
         html_source = get_html(playURL)
 
+        # Read parameters of ajax request in the <script>
         pattern = "var requestURL = '([^']*)';"
         match = re.findall(pattern, html_source)
-        print 'match: %s' % match
-        html_source = get_html(match[0])
+
+        pattern2 = '\'headers\': {"X-Forwarded-For":"(.+)","X-secret-Header":"(.+)"}'
+        headers = re.findall(pattern2, html_source)
+
+        html_source = get_html_tune_pk(match[0], headers[0][0], headers[0][1])
 
         pattern = 'file":"(.*?)"'
         match = re.findall(pattern, html_source)
-        print 'match: %s' % match
+        print 'Found m3u8 url: %s' % match
 
         stream_url = match[0]
         print 'stream_url: %s' % stream_url
@@ -484,14 +500,28 @@ def get_html(url, ref=None, post=None):
     response.close()
     return link
 
+def get_html_tune_pk(url, header_forwarded_for, header_secret):
+    req = urllib2.Request(url)
+    req.add_header('User-Agent',
+                   'Mozilla/5.0(iPad; U; CPU iPhone OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B314 Safari/531.21.10')
+    req.add_header('Origin', 'https://embed.tune.pk')
+    req.add_header('X-Forwarded-For', header_forwarded_for)
+    req.add_header('X-secret-Header', header_secret)
+    response = urllib2.urlopen(req)
+    link = response.read()
+    response.close()
+    return link
 
 def SelectUrl(html, url):
     try:
         available_source = []
         print 'selecting Url'
-        mainUrl = getDailyMotionUrl(html, True)
-        print 'selected Url: %s' % mainUrl
 
+        mainUrl = getYouTubeURL(html, True)
+        if mainUrl and len(mainUrl) > 0:
+            available_source.append('Youtube Video')
+
+        mainUrl = getDailyMotionUrl(html, True)
         if (mainUrl):
             available_source.append('Dailymotion Video')
 
@@ -506,9 +536,6 @@ def SelectUrl(html, url):
         if mainUrl and len(mainUrl) > 0:
             available_source.append('Vidrail Video')
 
-        mainUrl = getYouTubeURL(html, True)
-        if mainUrl and len(mainUrl) > 0:
-            available_source.append('Youtube Video')
 
         defaultlinks = ['Dailymotion Video', 'Tune Video', 'Playwire Video', 'Vidrail Video', 'Youtube Video']
         defaultLinkType = selfAddon.getSetting("DefaultVideoType")
